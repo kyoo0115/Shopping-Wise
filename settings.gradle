@@ -1,1 +1,6 @@
 rootProject.name = 'ShoppingWise'
+
+include 'catalog-service'
+include 'user-service'
+include 'order-service'
+include 'recommendation-service'
