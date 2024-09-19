@@ -1,3 +1,4 @@
+# Existing Entries in Your .gitignore
 HELP.md
 .gradle
 build/
@@ -35,3 +36,56 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# Additional Necessary Entries
+
+### macOS ###
+.DS_Store
+
+### Windows ###
+Thumbs.db
+
+### Logs ###
+*.log
+logs/
+
+### Gradle ###
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### Compiled Java files ###
+*.class
+
+### Maven / Gradle output ###
+*.jar
+*.war
+*.ear
+*.zip
+
+### Temporary files ###
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+*.old
+
+### Docker ###
+*.env
+docker-compose.override.yml
+docker-compose.local.yml
+.env
+
+### Test Results ###
+/test-results/
+/test-output/
+/target/
+/surefire-reports/
+
+# IntelliJ IDEA specific additional generated files
+.idea/
+*.iml
+out/
