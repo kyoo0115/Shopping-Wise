@@ -80,3 +80,5 @@ docker-compose.yml
 /test-output/
 /target/
 /surefire-reports/
+
+application.yml
