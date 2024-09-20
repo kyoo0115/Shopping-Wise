@@ -51,10 +51,6 @@ logs/
 
 ### Gradle ###
 .gradle/
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
 
 ### Compiled Java files ###
 *.class
@@ -76,7 +72,7 @@ build/
 ### Docker ###
 *.env
 docker-compose.override.yml
-docker-compose.local.yml
+docker-compose.yml
 .env
 
 ### Test Results ###
@@ -84,8 +80,3 @@ docker-compose.local.yml
 /test-output/
 /target/
 /surefire-reports/
-
-# IntelliJ IDEA specific additional generated files
-.idea/
-*.iml
-out/
