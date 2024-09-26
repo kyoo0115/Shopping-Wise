@@ -14,6 +14,6 @@ public class SignInRequestDto {
   private String email;
 
   @NotBlank(message = "confirmPassword cannot be blank")
-  @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{8,15}$", message = "confirmPassword is not valid")
+  @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,15}$", message = "confirmPassword is not valid")
   private String password;
 }

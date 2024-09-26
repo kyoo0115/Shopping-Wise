@@ -8,7 +8,6 @@ import com.project.user.dto.response.SignInResponseDto;
 import com.project.user.dto.response.SignUpResponseDto;
 import com.project.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class UserController {
 
-  private UserService userService;
+  private final UserService userService;
 
   @PostMapping("/check-duplicate-and-send-verification")
   public ResponseEntity<Void> checkDuplicateAndSendVerification(
@@ -42,25 +41,23 @@ public class UserController {
 
   @PostMapping("/sign-up")
   public ResponseEntity<SignUpResponseDto> signUp(
-      @RequestBody @Valid SignUpRequestDto dto, HttpServletRequest request,
-      HttpServletResponse response
+      @RequestBody @Valid SignUpRequestDto dto
   ) {
-    return ResponseEntity.ok(userService.signUp(dto, request, response));
+    return ResponseEntity.ok(userService.signUp(dto));
   }
 
   @PostMapping("/sign-in")
   public ResponseEntity<SignInResponseDto> signIn(
-      @RequestBody @Valid SignInRequestDto dto, HttpServletRequest request,
-      HttpServletResponse response
+      @RequestBody @Valid SignInRequestDto dto
   ) {
-    return ResponseEntity.ok(userService.signIn(dto, request, response));
+    return ResponseEntity.ok(userService.signIn(dto));
   }
 
   @PostMapping("/sign-out")
   public ResponseEntity<Void> signOut(
-      HttpServletRequest request, HttpServletResponse response
+      HttpServletRequest request
   ) {
-    userService.signOut(request, response);
+    userService.signOut(request);
     return ResponseEntity.ok().build();
   }
 }

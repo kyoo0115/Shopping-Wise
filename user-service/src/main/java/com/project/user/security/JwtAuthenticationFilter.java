@@ -14,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
@@ -29,10 +30,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       FilterChain chain) throws ServletException, IOException {
     String token = tokenProvider.resolveToken(request);
 
-    if (token != null && tokenProvider.validateToken(token)) {
+    if (StringUtils.hasText(token) && tokenProvider.isValidToken(token)) {
       authenticateUser(token, request);
-    } else {
-      log.warn("JWT Token is missing or invalid");
+    } else if (StringUtils.hasText(token)) {
+      log.warn("Invalid JWT Token: {}", token);
+      response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token.");
+      return;
     }
 
     chain.doFilter(request, response);

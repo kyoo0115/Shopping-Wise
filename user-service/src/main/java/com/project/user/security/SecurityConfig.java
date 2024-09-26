@@ -13,6 +13,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
@@ -37,14 +38,17 @@ public class SecurityConfig {
     http
         .csrf(AbstractHttpConfigurer::disable)
         .httpBasic(AbstractHttpConfigurer::disable)
-        .cors(cors -> cors
-            .configurationSource(corsConfigurationSource())
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .sessionManagement(sessionManagement ->
+            sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         )
         .authorizeHttpRequests(authz -> authz
-            .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
+            .requestMatchers("/v1/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
                 "/swagger-resources/**", "/webjars/**", "/h2-console/**",
-                "api/users/check-duplicate-and-send-verification",
-                "api/users/check-verification-code", "api/users/sign-up", "api/users/sign-in")
+                "/api/v1/users/check-duplicate-and-send-verification",
+                "/api/v1/users/check-verification-code",
+                "/api/v1/users/sign-up",
+                "/api/v1/users/sign-in")
             .permitAll()
             .anyRequest().authenticated())
         .exceptionHandling(exception -> exception

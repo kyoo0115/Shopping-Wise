@@ -38,7 +38,7 @@ public class EmailProvider {
       javaMailSender.send(message);
 
     } catch (MessagingException | UnsupportedEncodingException e) {
-      throw new EmailSendErrorException("Email sending Error: " + e.getMessage());
+      throw new EmailSendErrorException();
     }
   }
 

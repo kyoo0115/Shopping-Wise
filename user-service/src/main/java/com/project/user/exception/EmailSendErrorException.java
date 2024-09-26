@@ -1,8 +1,10 @@
 package com.project.user.exception;
 
-public class EmailSendErrorException extends RuntimeException {
+import org.springframework.http.HttpStatus;
 
-  public EmailSendErrorException(String message) {
-    super(message);
+public class EmailSendErrorException extends GlobalException {
+
+  public EmailSendErrorException() {
+    super(HttpStatus.INTERNAL_SERVER_ERROR, "Email send error");
   }
 }

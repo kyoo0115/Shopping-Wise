@@ -1,8 +1,10 @@
 package com.project.user.exception;
 
-public class VerificationCodeNotMatchedException extends RuntimeException {
+import org.springframework.http.HttpStatus;
 
-  public VerificationCodeNotMatchedException(String message) {
-    super(message);
+public class VerificationCodeNotMatchedException extends GlobalException {
+
+  public VerificationCodeNotMatchedException() {
+    super(HttpStatus.BAD_REQUEST, "Verification code not matched");
   }
 }

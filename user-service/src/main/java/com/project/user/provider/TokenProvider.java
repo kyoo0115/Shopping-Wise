@@ -5,12 +5,13 @@ import com.project.user.repository.BlacklistRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,26 +30,89 @@ public class TokenProvider {
   private final BlacklistRepository blacklistRepository;
 
   private static final String TOKEN_PREFIX = "Bearer ";
-
   private static final String HEADER_STRING = "Authorization";
 
+  @PostConstruct
+  public void init() {
+    key = Keys.hmacShaKeyFor(secretKey.getBytes());
+  }
+
   /**
-   * 주어진 사용자 ID와 만료 날짜로 JWT 토큰을 생성합니다.
+   * JWT 토큰 생성
    */
-  private String createToken(String userId, LocalDateTime expiryDateTime) {
-    Date expiryDate = Date.from(expiryDateTime.atZone(ZoneId.systemDefault()).toInstant());
+  public String createToken(String userId, LocalDateTime expiryDateTime) {
     return Jwts.builder()
         .setSubject(userId)
         .setIssuedAt(new Date())
-        .setExpiration(expiryDate)
+        .setExpiration(convertToDate(expiryDateTime))
         .signWith(key, SignatureAlgorithm.HS256)
         .compact();
   }
 
   /**
-   * 주어진 JWT 토큰의 유효성을 검증합니다.
+   * JWT 토큰 검증
    */
-  public boolean validateToken(String token) {
+  public boolean isValidToken(String token) {
+    if (!validateTokenStructure(token)) {
+      return false;
+    }
+
+    if (isTokenBlacklisted(token)) {
+      return false;
+    }
+
+    return !isTokenExpired(token);
+  }
+
+  /**
+   * JWT 토큰에서 사용자 이름(이메일)을 추출합니다.
+   */
+  public String getUsernameFromToken(String token) {
+    return parseClaims(token).getSubject();
+  }
+
+  /**
+   * JWT 토큰에서 만료 날짜를 추출합니다.
+   */
+  public LocalDateTime getExpiryDateFromToken(String token) {
+    return convertToLocalDateTime(parseClaims(token).getExpiration());
+  }
+
+  /**
+   * JWT 토큰 블랙리스트 여부 확인
+   */
+  public boolean isTokenBlacklisted(String token) {
+    return blacklistRepository.findByToken(token).isPresent();
+  }
+
+  /**
+   * JWT 토큰 만료 여부 확인
+   */
+  public boolean isTokenExpired(String token) {
+    return getExpiryDateFromToken(token).isBefore(LocalDateTime.now());
+  }
+
+  /**
+   * JWT 토큰을 블랙리스트에 추가합니다.
+   */
+  public void blacklistToken(String token) {
+    BlacklistedTokenEntity blacklistedTokenEntity = new BlacklistedTokenEntity();
+    blacklistedTokenEntity.setToken(token);
+    blacklistedTokenEntity.setExpiryDate(getExpiryDateFromToken(token));
+
+    blacklistRepository.save(blacklistedTokenEntity);
+  }
+
+  /**
+   * 요청에서 JWT 토큰 추출
+   */
+  public String resolveToken(HttpServletRequest request) {
+    String bearerToken = request.getHeader(HEADER_STRING);
+    return (bearerToken != null && bearerToken.startsWith(TOKEN_PREFIX)) ? bearerToken.substring(7)
+        : null;
+  }
+
+  public boolean validateTokenStructure(String token) {
     try {
       Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
       return true;
@@ -57,55 +121,15 @@ public class TokenProvider {
     }
   }
 
-  /**
-   * JWT 토큰에서 사용자 이름(이메일)을 추출합니다.
-   */
-  public String getUsernameFromToken(String token) {
-    Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
-    return claims.getSubject();
+  private Claims parseClaims(String token) {
+    return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
   }
 
-  /**
-   * JWT 토큰에서 만료 날짜를 추출합니다.
-   */
-  public LocalDateTime getExpiryDateFromToken(String token) {
-    Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
-    Date expiration = claims.getExpiration();
-    return expiration.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+  private Date convertToDate(LocalDateTime dateTime) {
+    return Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());
   }
 
-  /**
-   * 주어진 JWT 토큰이 만료되었는지 확인합니다.
-   */
-  public boolean isTokenExpired(String token) {
-    LocalDateTime expiryDate = getExpiryDateFromToken(token);
-    return expiryDate.isBefore(LocalDateTime.now());
-  }
-
-  /**
-   * 주어진 JWT 토큰이 블랙리스트에 있는지 확인합니다.
-   */
-  public boolean isTokenBlacklisted(String token) {
-    Optional<BlacklistedTokenEntity> blacklistedToken = blacklistRepository.findByToken(token);
-    return blacklistedToken.isPresent();
-  }
-
-  /**
-   * 주어진 JWT 토큰을 블랙리스트에 추가합니다.
-   */
-  public void blacklistToken(String token) {
-    LocalDateTime expiryDate = getExpiryDateFromToken(token);
-    BlacklistedTokenEntity blacklistedTokenEntity = new BlacklistedTokenEntity();
-    blacklistedTokenEntity.setToken(token);
-    blacklistedTokenEntity.setExpiryDate(expiryDate);
-    blacklistRepository.save(blacklistedTokenEntity);
-  }
-
-  public String resolveToken(HttpServletRequest request) {
-    String bearerToken = request.getHeader(HEADER_STRING);
-    if (bearerToken != null && bearerToken.startsWith(TOKEN_PREFIX)) {
-      return bearerToken.substring(7);
-    }
-    return null;
+  private LocalDateTime convertToLocalDateTime(Date date) {
+    return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
   }
 }

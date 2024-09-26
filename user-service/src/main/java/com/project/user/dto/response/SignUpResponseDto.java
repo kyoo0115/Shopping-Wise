@@ -11,4 +11,10 @@ public class SignUpResponseDto {
 
   private Long id;
   private String email;
+
+  public static SignUpResponseDto of(String email) {
+    return SignUpResponseDto.builder()
+        .email(email)
+        .build();
+  }
 }

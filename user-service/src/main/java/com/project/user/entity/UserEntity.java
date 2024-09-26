@@ -41,4 +41,12 @@ public class UserEntity {
   @LastModifiedDate
   private LocalDateTime updatedAt;
 
+  public static UserEntity of(String email, String encodedPassword) {
+
+    return UserEntity.builder()
+        .email(email)
+        .password(encodedPassword)
+        .roles("USER")
+        .build();
+  }
 }
